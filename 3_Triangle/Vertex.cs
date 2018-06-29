@@ -1,7 +1,7 @@
 ﻿using OpenTK;
 using OpenTK.Graphics;
 
-namespace _2_HelloTriangle
+namespace _3_Triangle
 {
     public class Vertex
     {

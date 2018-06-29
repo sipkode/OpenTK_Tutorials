@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+
+using OpenTK_Tutorials;
 
 namespace _2_HelloTriangle
 {
@@ -19,12 +20,6 @@ namespace _2_HelloTriangle
         private int shaderProgram;
 
         // Vertices
-        private readonly Vertex[] vertexBufferData = new Vertex[]
-        {
-            new Vertex(new Vector3(0.0f,  0.5f,  0.0f), Color4.CornflowerBlue),
-            new Vertex(new Vector3(0.5f, -0.5f,  0.0f), Color4.CornflowerBlue),
-            new Vertex(new Vector3(-0.5f, -0.5f,  0.0f), Color4.CornflowerBlue)
-        };
         private int vertexArray;
 
         public MainWindow() : 
@@ -37,7 +32,7 @@ namespace _2_HelloTriangle
 
         private void Window_Load(object sender, EventArgs e)
         {
-            shaderProgram = CreateProgram("SimpleShader.vert", "SimpleShader.frag");
+            shaderProgram = Utils.CreateProgram("SimpleShader.vert", "SimpleShader.frag");
             GL.GenVertexArrays(1, out vertexArray);
             GL.BindVertexArray(vertexArray);
         }
@@ -62,60 +57,6 @@ namespace _2_HelloTriangle
         {
             GL.DeleteVertexArrays(1, ref vertexArray);
             GL.DeleteProgram(shaderProgram);
-        }
-
-        private int CreateProgram(string vertexShaderPath, string fragmentShaderPath)
-        {
-            try
-            {
-                int program = GL.CreateProgram();
-                List<int> shaders = new List<int>
-                {
-                    CompileShader(ShaderType.VertexShader, vertexShaderPath),
-                    CompileShader(ShaderType.FragmentShader, fragmentShaderPath)
-                };
-
-                foreach (var shader in shaders)
-                {
-                    GL.AttachShader(program, shader);
-                }
-
-                GL.LinkProgram(program);
-                string info = GL.GetProgramInfoLog(program);
-
-                if (!string.IsNullOrWhiteSpace(info))
-                {
-                    throw new Exception($"CompileShaders ProgramLinking had errors: {info}");
-                }
-
-                foreach (var shader in shaders)
-                {
-                    GL.DetachShader(program, shader);
-                    GL.DeleteShader(shader);
-                }
-                return program;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.ToString());
-                throw;
-            }
-        }
-
-        private int CompileShader(ShaderType type, string path)
-        {
-            int shader = GL.CreateShader(type);
-            string src = File.ReadAllText(path);
-            GL.ShaderSource(shader, src);
-            GL.CompileShader(shader);
-            string info = GL.GetShaderInfoLog(shader);
-
-            if (!string.IsNullOrWhiteSpace(info))
-            {
-                throw new Exception($"CompileShader {type} had errors: {info}");
-            }
-
-            return shader;
         }
     }
 }

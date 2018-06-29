@@ -1,6 +1,6 @@
 ﻿#version 450 core
 
-layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 0) in vec4 vertexPosition_modelspace;
 
 void main()
 {
