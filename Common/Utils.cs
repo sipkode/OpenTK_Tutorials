@@ -5,7 +5,7 @@ using System.IO;
 
 using OpenTK.Graphics.OpenGL4;
 
-namespace OpenTK_Tutorials
+namespace OpenTK.Tutorials
 {
     internal class Utils
     {

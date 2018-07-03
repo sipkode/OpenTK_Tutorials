@@ -3,7 +3,7 @@ using OpenTK.Graphics;
 
 namespace _3_Triangle
 {
-    public class Vertex
+    public struct Vertex
     {
         private readonly Vector3 position;
         private readonly Color4 color;

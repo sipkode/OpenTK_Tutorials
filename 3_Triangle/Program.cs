@@ -8,8 +8,13 @@ namespace _3_Triangle
 {
     class Program
     {
+        private static readonly double fixedUpdateInterval = 1.0 / 60.0;
+
         static void Main(string[] args)
         {
+            MainWindow window = new MainWindow();
+
+            window.Run(fixedUpdateInterval);
         }
     }
 }

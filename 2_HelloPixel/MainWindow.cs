@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 
-using OpenTK_Tutorials;
+using OpenTK.Tutorials;
 
 namespace _2_HelloTriangle
 {
@@ -25,6 +22,7 @@ namespace _2_HelloTriangle
         public MainWindow() : 
             base(frameWidth, frameHeight)
         {
+            // Subscribe to the important window events.
             Load += Window_Load;
             RenderFrame += Window_RenderFrame;
             Closed += Window_Closed;
@@ -32,8 +30,13 @@ namespace _2_HelloTriangle
 
         private void Window_Load(object sender, EventArgs e)
         {
+            // Compile our vertex and fragment shader, and store the ID of the "program".
             shaderProgram = Utils.CreateProgram("SimpleShader.vert", "SimpleShader.frag");
+
+            // Generate one Vertex Array Object (VAO), and put the resulting identifier in vertexArray.
             GL.GenVertexArrays(1, out vertexArray);
+
+            // Tell OpenGL to use the resultant VAO.
             GL.BindVertexArray(vertexArray);
         }
 
