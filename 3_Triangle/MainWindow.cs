@@ -21,9 +21,9 @@ namespace _3_Triangle
         private int vertexBuffer;
         private readonly Vertex[] vertexBufferData = new Vertex[]
         {
-            new Vertex(new Vector3(0.0f,  0.5f,  0.0f), Color4.CornflowerBlue),
-            new Vertex(new Vector3(0.5f, -0.5f,  0.0f), Color4.CornflowerBlue),
-            new Vertex(new Vector3(-0.5f, -0.5f,  0.0f), Color4.CornflowerBlue)
+            new Vertex(new Vector3(0.0f,  0.5f,  0.0f), Color4.HotPink),
+            new Vertex(new Vector3(0.5f, -0.5f,  0.0f), Color4.HotPink),
+            new Vertex(new Vector3(-0.5f, -0.5f,  0.0f), Color4.HotPink)
         };
 
         public MainWindow() :
@@ -51,26 +51,45 @@ namespace _3_Triangle
             // Tell OpenGL to use the resultant VBO.
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
 
-            // Fill the VBO with vertex data.
+            // Calculate the size of each vertex so that we can allocate our buffers.
+            int vertexSize = 0;
             unsafe
             {
-                GL.NamedBufferStorage(
-                    vertexBuffer,
-                    sizeof(Vertex) * vertexBufferData.Length,   // The size needed by this buffer
-                    vertexBufferData,                           // Data to initialize with
-                    BufferStorageFlags.MapWriteBit);            // At this point we will only write to the buffer
+                vertexSize = sizeof(Vertex);
             }
 
+            // Fill the VBO with vertex data.
+            GL.NamedBufferStorage(
+                vertexBuffer,
+                vertexSize * vertexBufferData.Length,  // The size needed by this buffer
+                vertexBufferData,                       // Data to initialize with
+                BufferStorageFlags.MapWriteBit);        // At this point we will only write to the buffer
+            
             // Tell OpenGL about each element of our Vertex definition.
+            //  Element 0: Position
             GL.VertexArrayAttribBinding(vertexArray, 0, 0);
             GL.EnableVertexArrayAttrib(vertexArray, 0);
             GL.VertexArrayAttribFormat(
                 vertexArray,
                 0,                      // Attribute index, from the shader location = 0
-                4,                      // Size of attribute, vec4
+                3,                      // Size of attribute, vec4
                 VertexAttribType.Float, // Contains floats
                 false,                  // Does not need to be normalized as it is already, floats ignore this flag anyway
                 0);                     // Relative offset, first item
+
+            //  Element 1: Colour
+            GL.VertexArrayAttribBinding(vertexArray, 1, 0);
+            GL.EnableVertexArrayAttrib(vertexArray, 1);
+            GL.VertexArrayAttribFormat(
+                vertexArray,
+                1,                      // Attribute index, from the shader location = 0
+                4,                      // Size of attribute, vec4
+                VertexAttribType.Float, // Contains floats
+                false,                  // Does not need to be normalized as it is already, floats ignore this flag anyway
+                12);                    // Relative offset, first item
+
+            // Link the vertex array and buffer and provide the stride as size of Vertex
+            GL.VertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, IntPtr.Zero, vertexSize);
         }
 
         private void Window_RenderFrame(object sender, FrameEventArgs e)
@@ -83,9 +102,10 @@ namespace _3_Triangle
             // Use our custom shaders
             GL.UseProgram(shaderProgram);
 
-            // Draw a single point
-            GL.DrawArrays(PrimitiveType.Points, 0, 1);
-            GL.PointSize(10);
+            // Draw the list of triangles
+            GL.BindVertexArray(vertexArray);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, vertexBufferData.Length);
+
             SwapBuffers();
         }
 
