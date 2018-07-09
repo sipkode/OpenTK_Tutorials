@@ -6,7 +6,7 @@ using OpenTK.Graphics.OpenGL;
 
 using OpenTK.Tutorials;
 
-namespace _3_Triangle
+namespace _5_Matrices
 {
     public class MainWindow : GameWindow
     {

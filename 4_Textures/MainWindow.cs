@@ -6,7 +6,7 @@ using OpenTK.Graphics.OpenGL;
 
 using OpenTK.Tutorials;
 
-namespace _3_Triangle
+namespace _4_Textures
 {
     public class MainWindow : GameWindow
     {
@@ -18,14 +18,22 @@ namespace _3_Triangle
 
         // Vertices
         private int vertexArray;
-        private int vertexBuffer;
+        private int elementBuffer;
+        private int indexBuffer;
 
         // NB: These coordinates are in Screen Space (-1 to 1)
-        private readonly Vertex[] vertexBufferData = new Vertex[]
+        private readonly Vertex[] elementBufferData = new Vertex[]
         {
-            new Vertex(new Vector3(0.0f,  0.5f,  0.0f), Color4.HotPink),
+            new Vertex(new Vector3(0.5f,  0.5f,  0.0f), Color4.HotPink),
             new Vertex(new Vector3(0.5f, -0.5f,  0.0f), Color4.HotPink),
-            new Vertex(new Vector3(-0.5f, -0.5f,  0.0f), Color4.HotPink)
+            new Vertex(new Vector3(-0.5f, -0.5f,  0.0f), Color4.HotPink),
+            new Vertex(new Vector3(-0.5f, 0.5f,  0.0f), Color4.HotPink)
+        };
+
+        private readonly uint[] indexBufferData = new uint[]
+        {
+            1,2,0,
+            3,2,1
         };
 
         public MainWindow() :
@@ -47,12 +55,6 @@ namespace _3_Triangle
             // Tell OpenGL to use the resultant VAO.
             GL.BindVertexArray(vertexArray);
 
-            // Create a Vertex Buffer Object (VBO).
-            vertexBuffer = GL.GenBuffer();
-
-            // Tell OpenGL to use the resultant VBO.
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
-
             // Calculate the size of each vertex so that we can allocate our buffers.
             int vertexSize = 0;
             unsafe
@@ -60,13 +62,12 @@ namespace _3_Triangle
                 vertexSize = sizeof(Vertex);
             }
 
-            // Fill the VBO with vertex data.
-            GL.NamedBufferStorage(
-                vertexBuffer,
-                vertexSize * vertexBufferData.Length,   // The size needed by this buffer
-                vertexBufferData,                       // Data to initialize with
-                BufferStorageFlags.MapWriteBit);        // At this point we will only write to the buffer
-            
+            // Create an Element Buffer Object (EBO).
+            elementBuffer = GL.GenBuffer();
+
+            // Tell OpenGL to use the generated EBO.
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
+
             // Tell OpenGL about each element of our Vertex definition.
             //  Element 0: Position
             GL.VertexArrayAttribBinding(vertexArray, 0, 0);
@@ -91,7 +92,20 @@ namespace _3_Triangle
                 12);                    // Relative offset, first item
 
             // Link the vertex array and buffer and provide the stride as size of Vertex
-            GL.VertexArrayVertexBuffer(vertexArray, 0, vertexBuffer, IntPtr.Zero, vertexSize);
+            GL.VertexArrayVertexBuffer(vertexArray, 0, elementBuffer, IntPtr.Zero, vertexSize);
+
+            // Create the Index Buffer Object (IBO).
+            indexBuffer = GL.GenBuffer();
+
+            // Fill the EBO with vertex data.
+            GL.NamedBufferStorage(
+                elementBuffer,
+                vertexSize * elementBufferData.Length,  // The size needed by this buffer
+                elementBufferData,                      // Data to initialize with
+                BufferStorageFlags.MapReadBit);         // At this point we will only ead from the buffer
+
+            // Set the active index buffer.
+            GL.VertexArrayElementBuffer(vertexArray, indexBuffer);
         }
 
         private void Window_RenderFrame(object sender, FrameEventArgs e)
@@ -104,9 +118,19 @@ namespace _3_Triangle
             // Use our custom shaders
             GL.UseProgram(shaderProgram);
 
+            // Remind OpenGL to use the generated buffer objects.
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
+
+            // Fill the IBO with index data. This needs to happen every frame.
+            GL.NamedBufferStorage(
+                indexBuffer,
+                sizeof(uint) * indexBufferData.Length,  // The size needed by this buffer
+                indexBufferData,                        // Data to initialize with
+                BufferStorageFlags.MapReadBit);         // At this point we will only read from the buffer
+
             // Draw the list of triangles
             GL.BindVertexArray(vertexArray);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, vertexBufferData.Length);
+            GL.DrawElements(PrimitiveType.Triangles, indexBufferData.Length, DrawElementsType.UnsignedInt, indexBuffer);
 
             SwapBuffers();
         }
