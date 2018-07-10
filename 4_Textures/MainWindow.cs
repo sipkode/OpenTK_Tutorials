@@ -24,10 +24,10 @@ namespace _4_Textures
         // NB: These coordinates are in Screen Space (-1 to 1)
         private readonly Vertex[] elementBufferData = new Vertex[]
         {
-            new Vertex(new Vector3(0.5f,  0.5f,  0.0f), Color4.HotPink),
-            new Vertex(new Vector3(0.5f, -0.5f,  0.0f), Color4.HotPink),
-            new Vertex(new Vector3(-0.5f, -0.5f,  0.0f), Color4.HotPink),
-            new Vertex(new Vector3(-0.5f, 0.5f,  0.0f), Color4.HotPink)
+            new Vertex(new Vector3(0.5f,  0.5f,  0.0f), new Vector2(1, 1)),
+            new Vertex(new Vector3(0.5f, -0.5f,  0.0f), new Vector2(1, 0)),
+            new Vertex(new Vector3(-0.5f, -0.5f,  0.0f), new Vector2(0, 0)),
+            new Vertex(new Vector3(-0.5f, 0.5f,  0.0f), new Vector2(0, 1))
         };
 
         private readonly uint[] indexBufferData = new uint[]
@@ -42,6 +42,11 @@ namespace _4_Textures
             Load += Window_Load;
             RenderFrame += Window_RenderFrame;
             Closed += Window_Closed;
+        }
+
+        private void LoadTexture(string fileName)
+        {
+
         }
 
         private void Window_Load(object sender, EventArgs e)
@@ -80,7 +85,7 @@ namespace _4_Textures
                 false,                  // Does not need to be normalized as it is already, floats ignore this flag anyway
                 0);                     // Relative offset, first item
 
-            //  Element 1: Colour
+            //  Element 1: Texture Coordinate
             GL.VertexArrayAttribBinding(vertexArray, 1, 0);
             GL.EnableVertexArrayAttrib(vertexArray, 1);
             GL.VertexArrayAttribFormat(
@@ -102,10 +107,17 @@ namespace _4_Textures
                 elementBuffer,
                 vertexSize * elementBufferData.Length,  // The size needed by this buffer
                 elementBufferData,                      // Data to initialize with
-                BufferStorageFlags.MapReadBit);         // At this point we will only ead from the buffer
+                BufferStorageFlags.MapReadBit);         // At this point we will only read from the buffer
 
             // Set the active index buffer.
             GL.VertexArrayElementBuffer(vertexArray, indexBuffer);
+
+            ////GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(uint) * indexBufferData.Length, indexBufferData, BufferUsageHint.StaticDraw);
+            //GL.NamedBufferStorage(
+            //    indexBuffer,
+            //    sizeof(uint) * indexBufferData.Length,  // The size needed by this buffer
+            //    indexBufferData,                        // Data to initialize with
+            //    BufferStorageFlags.MapReadBit);         // At this point we will only read from the buffer
         }
 
         private void Window_RenderFrame(object sender, FrameEventArgs e)

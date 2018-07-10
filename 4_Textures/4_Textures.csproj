@@ -60,6 +60,11 @@
     <None Include="Shaders\SimpleShader.frag" />
     <None Include="Shaders\SimpleShader.vert" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Textures\reallife.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="..\Common\Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
