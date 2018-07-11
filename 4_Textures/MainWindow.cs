@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 using OpenTK;
 using OpenTK.Graphics;
@@ -21,15 +23,20 @@ namespace _4_Textures
         private int elementBuffer;
         private int indexBuffer;
 
+        // Texture
+        private int textureID;
+        private readonly string texturePath = "Textures/reallife.png";
+
         // NB: These coordinates are in Screen Space (-1 to 1)
         private readonly Vertex[] elementBufferData = new Vertex[]
         {
-            new Vertex(new Vector3(0.5f,  0.5f,  0.0f), new Vector2(1, 1)),
-            new Vertex(new Vector3(0.5f, -0.5f,  0.0f), new Vector2(1, 0)),
-            new Vertex(new Vector3(-0.5f, -0.5f,  0.0f), new Vector2(0, 0)),
-            new Vertex(new Vector3(-0.5f, 0.5f,  0.0f), new Vector2(0, 1))
+            new Vertex(new Vector3(0.5f,  0.5f,  0.0f), new Vector2(1, 0)),
+            new Vertex(new Vector3(0.5f, -0.5f,  0.0f), new Vector2(1, 1)),
+            new Vertex(new Vector3(-0.5f, -0.5f,  0.0f), new Vector2(0, 1)),
+            new Vertex(new Vector3(-0.5f, 0.5f,  0.0f), new Vector2(0, 0))
         };
 
+        // These are the indices into the elementBufferData structure
         private readonly uint[] indexBufferData = new uint[]
         {
             1,2,0,
@@ -44,12 +51,13 @@ namespace _4_Textures
             Closed += Window_Closed;
         }
 
-        private void LoadTexture(string fileName)
+        private void Window_Load(object sender, EventArgs e)
         {
-
+            SetupBuffers();
+            LoadTexture();
         }
 
-        private void Window_Load(object sender, EventArgs e)
+        private void SetupBuffers()
         {
             // Compile our vertex and fragment shader, and store the ID of the "program".
             shaderProgram = Utils.CreateProgram("SimpleShader.vert", "SimpleShader.frag");
@@ -91,7 +99,7 @@ namespace _4_Textures
             GL.VertexArrayAttribFormat(
                 vertexArray,
                 1,                      // Attribute index, from the shader location = 0
-                4,                      // Size of attribute, vec4
+                2,                      // Size of attribute, vec4
                 VertexAttribType.Float, // Contains floats
                 false,                  // Does not need to be normalized as it is already, floats ignore this flag anyway
                 12);                    // Relative offset, first item
@@ -111,37 +119,78 @@ namespace _4_Textures
 
             // Set the active index buffer.
             GL.VertexArrayElementBuffer(vertexArray, indexBuffer);
+        }
 
-            ////GL.BufferData(BufferTarget.ElementArrayBuffer, sizeof(uint) * indexBufferData.Length, indexBufferData, BufferUsageHint.StaticDraw);
-            //GL.NamedBufferStorage(
-            //    indexBuffer,
-            //    sizeof(uint) * indexBufferData.Length,  // The size needed by this buffer
-            //    indexBufferData,                        // Data to initialize with
-            //    BufferStorageFlags.MapReadBit);         // At this point we will only read from the buffer
+        private void LoadTexture()
+        {
+            int width, height;
+
+            // Load the image from disk into a Bitmap object.
+            using (var bmp = (Bitmap)Image.FromFile(texturePath))
+            {
+                width = bmp.Width;
+                height = bmp.Height;
+
+                // Get access to the raw bitmap data in ARGB format.
+                BitmapData bmpData = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+                // Create the Texture ID for OpenGL to use.
+                GL.CreateTextures(TextureTarget.Texture2D, 1, out textureID);
+
+                // Allocate space to store the texture data.
+                GL.TextureStorage2D(
+                    textureID,
+                    1,                              // Number of mipmaps to generate.
+                    SizedInternalFormat.Rgba32f,
+                    width,
+                    height);
+
+                // Tell OpenGL to use our generated texture.
+                GL.BindTexture(TextureTarget.Texture2D, textureID);
+
+                // Fill the OpenGL texture with the data from our loaded image.
+                GL.TextureSubImage2D(
+                    textureID,
+                    0,                                          // Current Mipmap level
+                    0,                                          // x Offset
+                    0,                                          // y Offset
+                    width,
+                    height,
+                    OpenTK.Graphics.OpenGL.PixelFormat.Bgra,    // OpenGL BGRA maps to System.Drawing's ARGB
+                    PixelType.UnsignedByte,
+                    bmpData.Scan0);
+
+                bmp.UnlockBits(bmpData);
+            }
         }
 
         private void Window_RenderFrame(object sender, FrameEventArgs e)
         {
-            // Set the clear flags
+            // Set the clear flags.
             Color4 backColor = Color4.CornflowerBlue;
             GL.ClearColor(backColor);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
                 
-            // Use our custom shaders
+            // Use our custom shaders.
             GL.UseProgram(shaderProgram);
 
             // Remind OpenGL to use the generated buffer objects.
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
 
-            // Fill the IBO with index data. This needs to happen every frame.
+            // Fill the IBO with index data. This needs to happen every frame, apparently.
             GL.NamedBufferStorage(
                 indexBuffer,
                 sizeof(uint) * indexBufferData.Length,  // The size needed by this buffer
                 indexBufferData,                        // Data to initialize with
                 BufferStorageFlags.MapReadBit);         // At this point we will only read from the buffer
 
-            // Draw the list of triangles
+            // Tell OpenGL to use our VAO.
             GL.BindVertexArray(vertexArray);
+
+            // Tell OpenGL to use our texture.
+            GL.BindTexture(TextureTarget.Texture2D, textureID);
+
+            // Draw the list of triangles.
             GL.DrawElements(PrimitiveType.Triangles, indexBufferData.Length, DrawElementsType.UnsignedInt, indexBuffer);
 
             SwapBuffers();
